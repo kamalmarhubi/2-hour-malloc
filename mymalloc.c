@@ -22,6 +22,17 @@ static struct metadata md = {
 };
 
 
+// Returns the pointer to struct allocation that ptr is the data member of.
+//
+// Does no sanity checking.
+//
+// TODO: change this to a macro?
+struct allocation* alloc_of(void* ptr) {
+    char *p = (char*) ptr;
+    return (struct allocation*) p - offsetof(struct allocation, data);
+}
+
+
 void *mymalloc(size_t size) {
     return NULL;
 }
