@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdio.h>
 
 
 struct metadata {
@@ -23,6 +24,16 @@ static struct metadata md = {
     .next_alloc = NULL,
     .free_list = NULL,
 };
+
+
+void print_free_list() {
+    printf("in free list\n");
+    struct allocation* alloc;
+    for(alloc = md.free_list; alloc; alloc = alloc->next) {
+        printf("%016llx\t%016llx\n", alloc, alloc->size);
+    }
+    printf("end free list\n");
+}
 
 
 size_t remaining_space() {
@@ -55,6 +66,8 @@ bool fits_with_sbrk(size_t size) {
 // Ensures that an allocation of size is possible, extending program data space
 // if necessary.
 int ensure_fits(size_t size) {
+    // TODO: figure out where to put this... initializer?
+    if (!md.next_alloc) { md.next_alloc = sbrk(0); }
     if (fits_without_sbrk(size)) {
         return;
     }
@@ -79,19 +92,34 @@ int ensure_fits(size_t size) {
 // TODO: change this to a macro?
 struct allocation* alloc_of(void* ptr) {
     char *p = (char*) ptr;
-    return (struct allocation*) p - offsetof(struct allocation, data);
+    return (struct allocation*) (p - offsetof(struct allocation, data));
 }
 
 
 void *mymalloc(size_t size) {
+    // TODO: add looking at freelist
     ensure_fits(size);
 
+    struct allocation* alloc = md.next_alloc;
+    alloc->size = size;
+    alloc->next = NULL;
 
-    return NULL;
+    md.next_alloc += required(size);
+
+    return alloc->data;
 }
 
 
 void myfree(void *ptr) {
+    printf("in free\n");
+    struct allocation* alloc = alloc_of(ptr);
+    printf("in free2\n");
+    printf("alloc: %016llx\n", alloc);
+    printf("alloc.next: %016llx\n", alloc->next);
+    alloc->next = md.free_list;
+    printf("alloc: %016llx\n", alloc);
+    printf("in free3\n");
+    md.free_list = alloc;
 }
 
 

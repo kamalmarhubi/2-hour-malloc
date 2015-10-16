@@ -1,12 +1,20 @@
 #include <unistd.h>
+#include <string.h>
 #include <stdio.h>
+
 #include "mymalloc.h"
 
 
 int main(void) {
-    printf("%016llx\n", mymalloc(20));
+    char* s = mymalloc(128);
+    strcpy(s, "lolwat");
 
-    printf("%016llx\n", sbrk(0));
-    printf("%016llx\n", sbrk(1024));
-    printf("%016llx\n", sbrk(0));
+    printf("%016llx\n", s);
+
+    printf("free list before:\n");
+    print_free_list();
+
+    myfree(s);
+    printf("free list after:\n");
+    print_free_list();
 }
